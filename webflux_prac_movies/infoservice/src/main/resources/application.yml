@@ -1,0 +1,27 @@
+spring:
+  profiles:
+    active: local
+---
+spring:
+  config:
+    activate:
+      on-profile:
+        - local
+  data:
+    mongodb:
+      username: usr
+      password: pw
+      uri: uri
+      database: c0
+---
+spring:
+  config:
+    activate:
+      on-profile:
+        - prod
+  data:
+    mongodb:
+      username: usr
+      password: pw
+      uri: uri
+      database: c0
