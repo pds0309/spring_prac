@@ -20,4 +20,9 @@ public class MovieInfo {
     private Integer year;
     private List<String> cast;
     private LocalDate releaseDate;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }
