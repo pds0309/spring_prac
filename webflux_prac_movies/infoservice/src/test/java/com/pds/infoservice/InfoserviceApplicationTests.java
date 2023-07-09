@@ -1,13 +1,13 @@
-package com.pds.webflux_prac_movies;
+package com.pds.infoservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class WebfluxPracMoviesApplicationTests {
+class InfoserviceApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
