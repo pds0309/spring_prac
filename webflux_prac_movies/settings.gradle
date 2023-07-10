@@ -1,2 +1,3 @@
 rootProject.name = 'webflux_prac_movies'
 include 'infoservice'
+include 'reviewservice'
