@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: local
+server:
+  port: 8082
+---
+spring:
+  config:
+    activate:
+      on-profile:
+        - local
+  data:
+    mongodb:
+      uri: uri
+      database: c1
