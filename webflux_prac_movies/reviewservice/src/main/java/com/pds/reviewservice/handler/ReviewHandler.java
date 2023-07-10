@@ -2,6 +2,10 @@ package com.pds.reviewservice.handler;
 
 import com.pds.reviewservice.ReviewReactiveRepository;
 import com.pds.reviewservice.domain.Review;
+import com.pds.reviewservice.exception.ReviewDataException;
+import com.pds.reviewservice.exception.ReviewNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -9,10 +13,17 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class ReviewHandler {
+
+    @Autowired
+    private Validator validator;
 
     private final ReviewReactiveRepository reviewReactiveRepository;
 
@@ -22,6 +33,7 @@ public class ReviewHandler {
 
     public Mono<ServerResponse> addReview(ServerRequest request) {
         return request.bodyToMono(Review.class)
+                .doOnNext(this::validate) // side effect function
                 .flatMap(reviewReactiveRepository::save)
                 .flatMap(ServerResponse.status(HttpStatus.CREATED)::bodyValue);
     }
@@ -38,7 +50,8 @@ public class ReviewHandler {
 
     public Mono<ServerResponse> updateReview(ServerRequest request) {
         var reviewId = request.pathVariable("id");
-        var existingReview = reviewReactiveRepository.findById(reviewId);
+        var existingReview = reviewReactiveRepository.findById(reviewId)
+                .switchIfEmpty(Mono.error(new ReviewNotFoundException("no review")));
         return existingReview.flatMap(review ->
                 request.bodyToMono(Review.class)
                         .map(reqReview -> {
@@ -55,6 +68,17 @@ public class ReviewHandler {
         var existingReview = reviewReactiveRepository.findById(reviewId);
         return existingReview.flatMap(review -> reviewReactiveRepository.deleteById(reviewId))
                 .then(ServerResponse.noContent().build());
+    }
+
+    private void validate(Review review) {
+        var contraintViolaition = validator.validate(review);
+        if (contraintViolaition.isEmpty()) {
+            return;
+        }
+        var errorMessage = contraintViolaition.stream().map(ConstraintViolation::getMessage)
+                .sorted()
+                .collect(Collectors.joining(","));
+        throw new ReviewDataException(errorMessage);
     }
 
 }
