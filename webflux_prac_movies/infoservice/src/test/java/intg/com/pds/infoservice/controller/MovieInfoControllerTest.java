@@ -114,6 +114,22 @@ class MovieInfoControllerTest {
     }
 
     @Test
+    void updateMovieInfo_notfound() {
+        var updateMovieInfo = new MovieInfo(null,
+                "HELLO",
+                2005,
+                List.of("Bale", "Cane"),
+                LocalDate.parse("2005-06-15"));
+
+        webTestClient.put()
+                .uri("/v1/movieinfos/{id}", "eghaghaeghea")
+                .bodyValue(updateMovieInfo)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
+    @Test
     void deleteMovieInfo() {
         webTestClient.delete()
                 .uri("/v1/movieinfos/{id}", "abc")

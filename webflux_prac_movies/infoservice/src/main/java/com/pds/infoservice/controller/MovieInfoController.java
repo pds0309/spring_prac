@@ -3,6 +3,7 @@ package com.pds.infoservice.controller;
 import com.pds.infoservice.domain.MovieInfo;
 import com.pds.infoservice.service.MovieInfoService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,8 +34,10 @@ public class MovieInfoController {
     }
 
     @PutMapping("/movieinfos/{id}")
-    public Mono<MovieInfo> updateMovieInfo(@RequestBody MovieInfo movieInfo, @PathVariable String id) {
-        return movieInfoService.updateMovieInfo(id, movieInfo);
+    public Mono<ResponseEntity<MovieInfo>> updateMovieInfo(@RequestBody MovieInfo movieInfo, @PathVariable String id) {
+        return movieInfoService.updateMovieInfo(id, movieInfo)
+                .map(ResponseEntity.ok()::body)
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
     @DeleteMapping("/movieinfos/{id}")
