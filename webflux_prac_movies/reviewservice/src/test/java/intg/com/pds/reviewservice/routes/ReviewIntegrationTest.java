@@ -14,6 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.util.List;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -32,7 +33,7 @@ class ReviewIntegrationTest {
         var reivewList = List.of(
                 new Review(null, 1L, "Good movie!", 9.0),
                 new Review(null, 2L, "Nice movie!", 9.0),
-                new Review(null, 1L, "Excellent movie!", 8.0)
+                new Review("abc", 1L, "Excellent movie!", 8.0)
         );
         reviewReactiveRepository.saveAll(reivewList).blockLast();
     }
@@ -40,6 +41,39 @@ class ReviewIntegrationTest {
     @AfterEach
     void tearDown() {
         reviewReactiveRepository.deleteAll().block();
+    }
+
+    @Test
+    void getReviews() {
+        webTestClient
+                .get()
+                .uri("/v1/reviews")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .value(reviews -> {
+                    assertEquals(3, reviews.size());
+                });
+    }
+
+    @Test
+    void getReviewsByMovieInfoId() {
+        webTestClient
+                .get()
+                .uri(uriBuilder -> {
+                    return uriBuilder.path("/v1/reviews")
+                            .queryParam("movieInfoId", "1")
+                            .build();
+                })
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .value(reviewList -> {
+                    System.out.println("reviewList : " + reviewList);
+                    assertEquals(2, reviewList.size());
+                });
     }
 
     @Test
@@ -56,5 +90,44 @@ class ReviewIntegrationTest {
                 .consumeWith(reviewEntityExchangeResult -> {
                     assertNotNull(Objects.requireNonNull(reviewEntityExchangeResult.getResponseBody()).getReviewId());
                 });
+    }
+
+    @Test
+    void updateReview() {
+        String requestReviewId = "abc";
+        Review review = new Review(null, 1L, "Hello movie", 5.5);
+        webTestClient
+                .put()
+                .uri("/v1/reviews/{id}", requestReviewId)
+                .bodyValue(review)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(Review.class)
+                .consumeWith(reviewEntityExchangeResult -> {
+                    assertEquals("Hello movie", Objects.requireNonNull(reviewEntityExchangeResult.getResponseBody()).getComment());
+                });
+    }
+
+    @Test
+    void deleteReview() {
+        String requestReviewId = "abc";
+        webTestClient
+                .delete()
+                .uri("/v1/reviews/{id}", requestReviewId)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+    }
+
+    @Test
+    void deleteReview_not_exists() {
+        String requestReviewId = "a121bc";
+        webTestClient
+                .delete()
+                .uri("/v1/reviews/{id}", requestReviewId)
+                .exchange()
+                .expectStatus()
+                .isNoContent();
     }
 }
