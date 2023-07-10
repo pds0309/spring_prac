@@ -13,6 +13,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,6 +92,34 @@ class MovieInfoControllerTest {
                 .expectBody()
                 .jsonPath("$.movieInfoId").isEqualTo("abc")
                 .jsonPath("$.name").isEqualTo("The Dark Knight");
+    }
+
+    @Test
+    void updateMovieInfo() {
+        var updateMovieInfo = new MovieInfo(null,
+                "HELLO",
+                2005,
+                List.of("Bale", "Cane"),
+                LocalDate.parse("2005-06-15"));
+        webTestClient.put()
+                .uri("/v1/movieinfos/{id}", "abc")
+                .bodyValue(updateMovieInfo)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    assertEquals("HELLO", Objects.requireNonNull(movieInfoEntityExchangeResult.getResponseBody()).getName());
+                });
+    }
+
+    @Test
+    void deleteMovieInfo() {
+        webTestClient.delete()
+                .uri("/v1/movieinfos/{id}", "abc")
+                .exchange()
+                .expectStatus()
+                .isNoContent();
     }
 
 }
