@@ -70,4 +70,27 @@ class MovieInfoControllerTest {
                 });
     }
 
+    @Test
+    void getAllMovieInfos() {
+        webTestClient.get()
+                .uri("/v1/movieinfos")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(2);
+    }
+
+    @Test
+    void getMovieInfoById() {
+        webTestClient.get()
+                .uri("/v1/movieinfos/{id}", "abc")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody()
+                .jsonPath("$.movieInfoId").isEqualTo("abc")
+                .jsonPath("$.name").isEqualTo("The Dark Knight");
+    }
+
 }
