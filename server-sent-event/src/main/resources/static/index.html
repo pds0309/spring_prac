@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <input id="id-title-input" type="text"/>
+    <button onclick="handleSubmitClick()">Add</button>
+    <button onclick="handleUnsubscribeClick()">UnSubscribe</button>
+</div>
+<div id="id-list">
+    <h3>List</h3>
+</div>
+</body>
+<script>
+    let eventSource;
+    window.onload = () => {
+        eventSource = new EventSource('/stream/post');
+        eventSource.onmessage = function (event) {
+            if (event.data) {
+                const p = document.createElement("p");
+                const {title, postId} = JSON.parse(event.data);
+                p.append(postId + ": " + title);
+                document.getElementById('id-list').append(p);
+            }
+        };
+    }
+
+    function handleSubmitClick() {
+        const titleInputElement = document.getElementById('id-title-input');
+        fetch("/api/post", {
+            method: 'post',
+            body: JSON.stringify({title: titleInputElement.value}),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(() => {
+            titleInputElement.value = "";
+        });
+    }
+
+    function handleUnsubscribeClick() {
+        eventSource.close();
+    }
+</script>
+</html>
