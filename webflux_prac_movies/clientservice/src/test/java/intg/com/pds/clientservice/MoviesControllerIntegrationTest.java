@@ -1,5 +1,6 @@
 package com.pds.clientservice;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.pds.clientservice.domain.Movie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,8 @@ class MoviesControllerIntegrationTest {
                 .isNotFound()
                 .expectBody(String.class)
                 .isEqualTo("There is no Movie Info by passed id : abc");
+        // should not retry when not found
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/v1/movieinfos/" + movieId)));
     }
 
     @Test
@@ -112,5 +115,6 @@ class MoviesControllerIntegrationTest {
                 .exchange()
                 .expectStatus()
                 .is5xxServerError();
+        WireMock.verify(3, getRequestedFor(urlEqualTo("/v1/movieinfos/" + movieId)));
     }
 }
