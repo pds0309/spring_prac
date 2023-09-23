@@ -53,3 +53,91 @@
 
 **replay**
 - 이전에 발행된 이벤트들을 기억해 추가로 연결되는 Subscriber 에게 전달
+
+<br>
+
+## [WebSocket Simple Chat](https://github.com/pds0309/spring_prac/tree/master/websocket_chat_prac)
+
+![socketsample](https://github.com/pds0309/spring_prac/assets/76927397/cf72552d-4e13-45f1-9c7a-4c89747e6eae)
+
+### Client Dependencies
+
+- sockjs
+- stompjs
+
+### Server Dependencies
+
+- boot-starter-websocket (spring-websocket, spring-messaging)
+
+### Enable Websocket 
+
+Add this annotation to an @Configuration class to enable broker-backed messaging over WebSocket using a higher-level messaging sub-protocol.
+
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig extends WebSocketMessageBrokerConfigurer {
+}
+```
+
+Register STOMP endpoints mapping each to a specific URL and (optionally) enabling and configuring SockJS fallback options.
+
+```java
+// WebSocketMessageBrokerConfigurer
+// Defines methods for configuring message handling with simple messaging protocols (e.g. STOMP) from WebSocket clients.
+
+// example
+// registry.addEndpoint("/portfolio").withSockJS();
+default void registerStompEndpoints(StompEndpointRegistry registry) {
+
+}
+```
+
+Configure message broker options
+
+
+```java
+// example
+// config.enableSimpleBroker("/topic"); =>  enable an in-memory message broker to carry the messages back to the client on destinations prefixed with “/topic”.
+// config.setApplicationDestinationPrefixes("/app"); => /app” prefix to filter destinations targeting application annotated methods (via @MessageMapping).
+default void configureMessageBroker(MessageBrokerRegistry registry) {
+
+}
+```
+<br>
+
+### Controller
+
+```java
+@Controller
+public class Controller {
+  @MessageMapping("/chat")
+  @SendTo("/topic/messages")
+  public ? send() {}
+}
+```
+
+<br>
+
+### Client Side
+
+**Connect & Subscribe**
+
+```javascript
+const socket = new SockJS('/chat');
+stompClient = Stomp.over(socket);  
+stompClient.connect({}, function(frame) {
+  setConnected(true);
+  stompClient.subscribe('/topic/messages', function(messageOutput) {
+    showMessageOutput(JSON.parse(messageOutput.body));
+  });
+});
+```
+
+**Send Message**
+
+```javascript
+stompClient.send("/app/chat", {}, YOUR_MESSAGE);
+```
+
+
